@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='injector_api',
-    version='0.0.9',
+    version='0.0.21',
     packages=find_packages(),
     author='Emanuel Castañeda',
     author_email='emanuel.castaneda.cardona@gmail.com',

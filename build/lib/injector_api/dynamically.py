@@ -9,9 +9,9 @@ CONFIG_FILE_NAME = "injectorConfig.json"
 try:
     with open(CONFIG_FILE_NAME, 'r') as file:
         config_data = json.load(file)
-        MODULE_APPLICATION = config_data.get("MODULE_APPLICATION", "utils")
+        MODULE_APPLICATION = config_data.get("MODULE_APPLICATION", "src")
 except FileNotFoundError:
-    MODULE_APPLICATION = "utils"
+    MODULE_APPLICATION = "src"
 
 
 
@@ -69,18 +69,25 @@ def inject(interface_index_mapping=None):
         def wrapper(*args, **kwargs):
             from .dependency import container
 
-            # Para depuración: imprime los servicios registrados
+            # Crear una lista mutable de argumentos
+            args_list = list(args)
 
+            # Identificar el parámetro que necesita la inyección
             for name, param in params.items():
                 if param.annotation in container._services:
                     index = interface_index_mapping.get(param.annotation, 0)
-                    # Obtiene el servicio directamente
                     service = container.get(param.annotation, index)
+                    
+                    # Si el servicio existe, inyectarlo en la posición correcta
                     if service:
-                        # Inyecta el servicio directamente en la función
-                        return func(service, *args, **kwargs)
+                        arg_position = list(params.keys()).index(name)
+                        if arg_position < len(args_list):
+                            args_list[arg_position] = service
+                        else:
+                            kwargs[name] = service
 
-            # Si llegamos aquí, significa que no se pudo inyectar el servicio
+            return func(*args_list, **kwargs)
+
             
 
 
