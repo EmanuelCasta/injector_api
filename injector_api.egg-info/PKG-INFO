@@ -1,3 +1,12 @@
+Metadata-Version: 2.1
+Name: injector-api
+Version: 0.0.9
+Summary: python dependency injection library, BETA
+Home-page: https://github.com/EmanuelCasta/injector_api
+Author: Emanuel Castañeda
+Author-email: emanuel.castaneda.cardona@gmail.com
+Description-Content-Type: text/markdown
+
 <h1>Injector API</h1>
 
 <p>
@@ -23,17 +32,14 @@ pip install injector-api
 
 <h2>Usage</h2>
 
-<h3>Configuration <code>injectorConfig.json</code></h3>
+<h3>Configuring <code>injectorConfig.py</code></h3>
 
 <p>
-  After installation, you must configure the library to suit your project. Create a <code>injectorConfig.json</code> at the root of your project. This file should define the following variable:
+  After installation, you must configure the library to suit your project. Create a <code>injectorConfig.py</code> at the root of your project. This file should define the following variable:
 </p>
 
-
 <pre><code>
-{
-    MODULE_APPLICATION = "your_directory_name_here"
-}
+MODULE_APPLICATION = "your_directory_name_here"
 </code></pre>
 
 <p>
@@ -55,12 +61,6 @@ pip install injector-api
 <pre><code>
 from injector_api.dependency import container
 
-# absolute routes, DO NOT USE RELATIVE ROUTES
-from aplicacion.src.interfaces import IExampleService
-from aplicacion.src.interfaces import ExampleServiceImpl1
-from aplicacion.src.interfaces import ExampleServiceImpl2
-from aplicacion.src.interfaces import InterfaceWithoutOtherService
-
 # Your interfaces and classes here
 
 container.register(IExampleService, ExampleServiceImpl1, override=True)
@@ -76,10 +76,6 @@ container.register(InterfaceWithoutOtherService, ImplInterface,override=True)
 
 <pre><code>
 from injector_api.cargaDinamica import inject
-
-"""
-  Using the decorator with () if you use only inject will throw an error, correctly use inject() in case of defining two services for an interface place {interface:0} where 0 corresponds to the first record of the injection
-"""
 
 @inject({IExampleService: 0})
 def some_function(service: IExampleService):
@@ -99,42 +95,6 @@ def some_function_two(service: InterfaceWithoutOtherService):
 <p>
   Ensure that the <code>module.py</code> file is located in the directory you've specified in <code>injectorConfig.py</code>. This file will be automatically read by the library upon execution to load and manage dependencies.
 </p>
-
-<h1>Usage Guide for Injector Library in Django</h1>
-
-<p>This guide will walk you through setting up the Injector dependency injection library in a Django project.</p>
-
-<h2>1. Environment Setup</h2>
-<p>Ensure you have Django installed and a project initialized.</p>
-
-<h2>2. Configuring <code>injectorConfig.json</code></h2>
-<p>In the root of your Django project (where <code>manage.py</code> is located), create a file named <code>injectorConfig.json</code>:</p>
-<pre><code>
-{
-    "MODULE_APPLICATION": "myapp"
-}
-</code></pre>
-<p>Here, <code>myapp</code> is the name of the Django application where the injector should look for the <code>module.py</code> file.</p>
-
-<h2>3. Setting up <code>module.py</code></h2>
-<p>Inside your <code>myapp</code> application, create a file named <code>module.py</code>. This file will register the dependencies.</p>
-<pre><code>
-from injector_api.dependency import container
-# absolute routes, DO NOT USE RELATIVE ROUTES
-from myapp.services import MyService
-
-container.register(SomeInterface, MyService)
-</code></pre>
-<p>Make sure <code>SomeInterface</code> and <code>MyService</code> are defined in your project and import absolute routes, DO NOT USE RELATIVE ROUTES</p>
-
-<h2>4. Using in a Django View</h2>
-<p>Now, let's say you have a Django view and you want to use your injected service. You can utilize the <code>@inject</code> decorator to automatically provide the necessary service implementations to your view functions or class-based views.</p>
-
-<h2>5. Important Notes:</h2>
-<ul>
-    <li>Always ensure that the <code>injectorConfig.json</code> file is placed in a secure location and cannot be accessed by unauthorized users.</li>
-    <li>The <code>module.py</code> file should only contain dependency registrations. Avoid executing any business logic in this file.</li>
-</ul>
 
 <h2>Security Recommendations</h2>
 
