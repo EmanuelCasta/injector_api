@@ -1,8 +1,19 @@
 import os
 import importlib.util
 
+import json
 
-MODULE_APLICATION= "utils"
+CONFIG_FILE_NAME = "injectorConfig.json"
+
+# Leer la configuración desde el archivo JSON
+try:
+    with open(CONFIG_FILE_NAME, 'r') as file:
+        config_data = json.load(file)
+        MODULE_APPLICATION = config_data.get("MODULE_APPLICATION", "utils")
+except FileNotFoundError:
+    MODULE_APPLICATION = "utils"
+
+
 
 LOADED_MODULES_CACHE = []
 
@@ -37,16 +48,18 @@ def load_modules_from_subdirectories(directory, module_name="module.py", use_cac
 
 
 def inject(interface_index_mapping=None):
+
     import inspect
     from functools import wraps
 
     
     if interface_index_mapping is None:
         interface_index_mapping = {}
-
+        
+ 
     # Cargar módulos 'module.py' de subdirectorios
-    parent_directory = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    desired_directory = os.path.join(parent_directory, MODULE_APLICATION)
+    parent_directory = os.getcwd()
+    desired_directory = os.path.join(parent_directory, MODULE_APPLICATION)
     load_modules_from_subdirectories(desired_directory, use_cache=True)
 
     def decorator(func):
