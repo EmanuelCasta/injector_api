@@ -1,0 +1,9 @@
+README.md
+setup.py
+injector_api/__init__.py
+injector_api/cargaDinamica.py
+injector_api/dependency.py
+injector_api.egg-info/PKG-INFO
+injector_api.egg-info/SOURCES.txt
+injector_api.egg-info/dependency_links.txt
+injector_api.egg-info/top_level.txt
