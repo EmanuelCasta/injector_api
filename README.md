@@ -107,6 +107,7 @@ def some_function_two(service: InterfaceWithoutOtherService):
   In Django, call <code>configure</code> in your app configuration:
 </p>
 <pre><code>
+
 # application/apps.py
 
 from django.apps import AppConfig
@@ -117,7 +118,10 @@ class ApplicationConfig(AppConfig):
     name = 'application'  # Ensure to use the correct name of your app here
 
     def ready(self):
-        injector_api.configure(module_application="new_src")
+        """
+          It should be intuited that the new_src must be in the same apps.py directory, with new_src being a dywan
+        """
+        injector_api.configure(module_application="new_src") 
         
 # application/__init__.py
 
