@@ -44,6 +44,10 @@ class DependencyContainer:
         
         if implementation_name and implementation:
             raise ValueError("Specify either an implementation class or an implementation name, not both.")
+        
+        if isinstance(implementation, str):
+            raise TypeError("The 'implementation' argument should be a class, not a string.")
+    
 
         
         if implementation_name:
@@ -64,12 +68,12 @@ class DependencyContainer:
         if not issubclass(implementation, interface):
             raise TypeError(f'Dependency error: {implementation} is not a subclass of {interface}')
         
-        if interface in self._services and not override:
+        if interface.__name__ in self._services and not override:
             raise ValueError(f"Registration error: Interface {interface} already has a registered implementation.")
         
-        if interface not in self._services:
-            self._services[interface] = []
-        self._services[interface].append((implementation, lifecycle))
+        if interface.__name__ not in self._services:
+            self._services[interface.__name__] = []
+        self._services[interface.__name__].append((implementation, lifecycle))
         
     def _get_all_subclasses(self, cls):
         """
@@ -99,15 +103,15 @@ class DependencyContainer:
         Retrieves an instance of the service registered for the provided interface.
         The lifecycle determines how the instance is created and managed.
         """
-        if interface not in self._services:
+        if interface.__name__ not in self._services:
             raise ValueError(f"Dependency error: No service registered for interface {interface}")
         
-        implementation, lifecycle = self._services[interface][index]
+        implementation, lifecycle = self._services[interface.__name__][index]
 
         if lifecycle == SINGLETON:
-            if (interface, index) not in self.__instances:
-                self.__instances[(interface, index)] = implementation(*args, **kwargs)
-            return self.__instances[(interface, index)]
+            if (interface.__name__, index) not in self.__instances:
+                self.__instances[(interface.__name__, index)] = implementation(*args, **kwargs)
+            return self.__instances[(interface.__name__, index)]
         
         elif lifecycle == TRANSIENT:
             return implementation(*args, **kwargs)
@@ -119,9 +123,9 @@ class DependencyContainer:
             
             if scope_id not in self.__scoped_instances:
                 self.__scoped_instances[scope_id] = {}
-            if interface not in self.__scoped_instances[scope_id]:
-                self.__scoped_instances[scope_id][interface] = implementation(*args, **kwargs)
-            return self.__scoped_instances[scope_id][interface]
+            if interface.__name__ not in self.__scoped_instances[scope_id]:
+                self.__scoped_instances[scope_id][interface.__name__] = implementation(*args, **kwargs)
+            return self.__scoped_instances[scope_id][interface.__name__]
     
         
         else:

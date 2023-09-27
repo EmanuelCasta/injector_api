@@ -69,11 +69,12 @@ def inject(interface_index_mapping=None):
         @wraps(func)
         def wrapper(*args, **kwargs):
             from .container import container
-
+    
             args_list = list(args)
 
             for name, param in params.items():
-                if param.annotation in container._services:
+              
+                if param.annotation.__name__ in container._services:
                     index = interface_index_mapping.get(param.annotation, 0)
                     service = container.get(param.annotation, index)
                     
