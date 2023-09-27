@@ -1,45 +1,21 @@
 import os
 import importlib.util
+
 import json
-import logging
-
-logger = logging.getLogger(__name__)
-
-
-DEFAULT_CONFIG = {
-    "MODULE_APPLICATION": "apps"
-}
 
 CONFIG_FILE_NAME = "injectorConfig.json"
-USE_CONFIGURE = False
+
 LOADED_MODULES_CACHE = []
-MODULE_TIMESTAMP_CACHE = "module_timestamps.json"
-MODULE_APPLICATION = None
 
-def load_config_from_file():
-    global MODULE_APPLICATION
-    try:
-        with open(CONFIG_FILE_NAME, 'r') as file:
-            config_data = json.load(file)
-            MODULE_APPLICATION = config_data.get("MODULE_APPLICATION", DEFAULT_CONFIG["MODULE_APPLICATION"])
-    except FileNotFoundError:
-        MODULE_APPLICATION = DEFAULT_CONFIG["MODULE_APPLICATION"]
-        logger.warning(f"Warning: {CONFIG_FILE_NAME} not found. Using default configuration.")
-    except json.JSONDecodeError:
-        MODULE_APPLICATION = DEFAULT_CONFIG["MODULE_APPLICATION"]
-        logger.warning(f"Warning: {CONFIG_FILE_NAME} is not well-formed. Using default configuration.")
+# Leer la configuración desde el archivo JSON
+try:
+    with open(CONFIG_FILE_NAME, 'r') as file:
+        config_data = json.load(file)
+        MODULE_APPLICATION = config_data.get("MODULE_APPLICATION", "src")
+except FileNotFoundError:
+        raise RuntimeError("injectorConfig.json configuration file missing or you are not running the project in the same directory as the .json file.")
 
-def configure(module_application):
-    global MODULE_APPLICATION
-    global USE_CONFIGURE 
-    USE_CONFIGURE = True
-    MODULE_APPLICATION = module_application
 
-def get_module_application():
-    global MODULE_APPLICATION
-    if MODULE_APPLICATION is None and not USE_CONFIGURE:
-        load_config_from_file()
-    return MODULE_APPLICATION
 
 def load_modules_from_subdirectories(directory, module_name="module.py", use_cache=True):
     """
@@ -55,6 +31,7 @@ def load_modules_from_subdirectories(directory, module_name="module.py", use_cac
     for root, dirs, files in os.walk(directory):
         if module_name in files:
             module_path = os.path.join(root, module_name)
+            
             try:
                 # Cargar el módulo dinámicamente
                 spec = importlib.util.spec_from_file_location(module_name, module_path)
@@ -64,13 +41,11 @@ def load_modules_from_subdirectories(directory, module_name="module.py", use_cac
             except Exception as e:
                 raise ImportError(f"Error importing file '{module_path}'. Original error message: {str(e)}")
 
+    # Actualizar la caché
     LOADED_MODULES_CACHE = loaded_modules
 
-    
+    return loaded_modules
 
-parent_directory = os.getcwd()
-desired_directory = os.path.join(parent_directory, get_module_application())
-load_modules_from_subdirectories(desired_directory, use_cache=True)
 
 def inject(interface_index_mapping=None):
     """
@@ -83,10 +58,13 @@ def inject(interface_index_mapping=None):
     if interface_index_mapping is None:
         interface_index_mapping = {}
         
+ 
+    parent_directory = os.getcwd()
+    desired_directory = os.path.join(parent_directory, MODULE_APPLICATION)
+    load_modules_from_subdirectories(desired_directory, use_cache=True)
 
     def decorator(func):
         params = inspect.signature(func).parameters
-        param_names = list(params.keys())
        
         @wraps(func)
         def wrapper(*args, **kwargs):
@@ -101,7 +79,7 @@ def inject(interface_index_mapping=None):
                     service = container.get(param.annotation, index)
                     
                     if service:
-                        arg_position = param_names.index(name)
+                        arg_position = list(params.keys()).index(name)
                         if arg_position < len(args_list):
                             args_list[arg_position] = service
                         else:
