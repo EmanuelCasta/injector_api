@@ -109,7 +109,8 @@ def some_function_two(service: InterfaceWithoutOtherService):
 <pre><code>
 
 # application/apps.py
-
+<pre></code>
+<pre><code>
 from django.apps import AppConfig
 import injector_api
 
@@ -122,7 +123,9 @@ class ApplicationConfig(AppConfig):
           It should be intuited that the new_src must be in the same apps.py directory, with new_src being a dywan
         """
         injector_api.configure(module_application="new_src") 
-        
+</code></pre>
+<pre><code>
+
 # application/__init__.py
 
 default_app_config = 'application.apps.ApplicationConfig'
