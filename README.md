@@ -84,7 +84,7 @@ container.register(InterfaceWithoutOtherService, implementation_name='ImplInterf
 from injector_api.dynamically import inject
 
 """
-  Always use the decorator with () - using only @inject will throw an error. For correct usage, employ @inject(). When defining multiple services for an interface, use the format {interface:0}, where 0 corresponds to the first registered injection.
+  Use @inject() only when specifying the type of implementation. For correct usage, employ @inject() with the format {interface:0}, where 0 corresponds to the first registered injection. Without specifying the type of implementation, simply use @inject
 """
 
 @inject({IExampleService: 0})
