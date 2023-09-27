@@ -124,8 +124,6 @@ class ApplicationConfig(AppConfig):
         """
         injector_api.configure(module_application="new_src") 
 </code></pre>
-<pre><code>
-
 # application/__init__.py
 
 default_app_config = 'application.apps.ApplicationConfig'
