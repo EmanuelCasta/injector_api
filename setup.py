@@ -5,6 +5,8 @@ setup(
     version='0.0.21',
     packages=find_packages(),
     author='Emanuel Castañeda',
+    packages=find_packages(exclude=["tests*","utils*"]),
+    include_package_data=True, 
     author_email='emanuel.castaneda.cardona@gmail.com',
     description='python dependency injection library, BETA',
     long_description=open('README.md').read(),

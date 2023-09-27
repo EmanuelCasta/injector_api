@@ -5,21 +5,21 @@ import json
 
 CONFIG_FILE_NAME = "injectorConfig.json"
 
+LOADED_MODULES_CACHE = []
+
 # Leer la configuración desde el archivo JSON
 try:
     with open(CONFIG_FILE_NAME, 'r') as file:
         config_data = json.load(file)
         MODULE_APPLICATION = config_data.get("MODULE_APPLICATION", "src")
 except FileNotFoundError:
-    MODULE_APPLICATION = "src"
+        raise RuntimeError("injectorConfig.json configuration file missing or you are not running the project in the same directory as the .json file.")
 
 
-
-LOADED_MODULES_CACHE = []
 
 def load_modules_from_subdirectories(directory, module_name="module.py", use_cache=True):
     """
-    Carga dinámicamente todos los módulos con un nombre específico desde los subdirectorios de un directorio dado.
+    Dynamically loads all modules with a specific name from the subdirectories of a given directory.
     """
     global LOADED_MODULES_CACHE
     
@@ -39,7 +39,7 @@ def load_modules_from_subdirectories(directory, module_name="module.py", use_cac
                 spec.loader.exec_module(module)
                 loaded_modules.append(module)
             except Exception as e:
-                raise ImportError(f"Error al importar el archivo '{module_path}'. Mensaje de error original: {str(e)}")
+                raise ImportError(f"Error importing file '{module_path}'. Original error message: {str(e)}")
 
     # Actualizar la caché
     LOADED_MODULES_CACHE = loaded_modules
@@ -48,7 +48,9 @@ def load_modules_from_subdirectories(directory, module_name="module.py", use_cac
 
 
 def inject(interface_index_mapping=None):
-
+    """
+    A decorator that handles dependency injection for functions based on their type hints.
+    """
     import inspect
     from functools import wraps
 
@@ -57,7 +59,6 @@ def inject(interface_index_mapping=None):
         interface_index_mapping = {}
         
  
-    # Cargar módulos 'module.py' de subdirectorios
     parent_directory = os.getcwd()
     desired_directory = os.path.join(parent_directory, MODULE_APPLICATION)
     load_modules_from_subdirectories(desired_directory, use_cache=True)
@@ -67,18 +68,15 @@ def inject(interface_index_mapping=None):
        
         @wraps(func)
         def wrapper(*args, **kwargs):
-            from .dependency import container
+            from .container import container
 
-            # Crear una lista mutable de argumentos
             args_list = list(args)
 
-            # Identificar el parámetro que necesita la inyección
             for name, param in params.items():
                 if param.annotation in container._services:
                     index = interface_index_mapping.get(param.annotation, 0)
                     service = container.get(param.annotation, index)
                     
-                    # Si el servicio existe, inyectarlo en la posición correcta
                     if service:
                         arg_position = list(params.keys()).index(name)
                         if arg_position < len(args_list):
@@ -87,9 +85,6 @@ def inject(interface_index_mapping=None):
                             kwargs[name] = service
 
             return func(*args_list, **kwargs)
-
-            
-
 
         return wrapper
 
