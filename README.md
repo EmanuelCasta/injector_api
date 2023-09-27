@@ -128,6 +128,8 @@ class ApplicationConfig(AppConfig):
 
 default_app_config = 'application.apps.ApplicationConfig'
 </code></pre>
+
+</code></pre>
 <p>Use the common library as if it were your own project</p>
 
 <p>If you're integrating the Injector API within a Django project, you have the option to use the <code>ScopeMiddleware</code> to manage scoped dependencies. This middleware ensures that dependencies with a "scoped" lifecycle are correctly managed within the context of a web request.</p>
