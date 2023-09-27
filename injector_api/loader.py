@@ -1,21 +1,44 @@
 import os
 import importlib.util
-
 import json
+import logging
+
+logger = logging.getLogger(__name__)
+
+
+DEFAULT_CONFIG = {
+    "MODULE_APPLICATION": "apps"
+}
 
 CONFIG_FILE_NAME = "injectorConfig.json"
-
+USE_CONFIGURE = False
 LOADED_MODULES_CACHE = []
+MODULE_APPLICATION = None
 
-# Leer la configuración desde el archivo JSON
-try:
-    with open(CONFIG_FILE_NAME, 'r') as file:
-        config_data = json.load(file)
-        MODULE_APPLICATION = config_data.get("MODULE_APPLICATION", "src")
-except FileNotFoundError:
-        raise RuntimeError("injectorConfig.json configuration file missing or you are not running the project in the same directory as the .json file.")
+def load_config_from_file():
+    global MODULE_APPLICATION
+    try:
+        with open(CONFIG_FILE_NAME, 'r') as file:
+            config_data = json.load(file)
+            MODULE_APPLICATION = config_data.get("MODULE_APPLICATION", DEFAULT_CONFIG["MODULE_APPLICATION"])
+    except FileNotFoundError:
+        MODULE_APPLICATION = DEFAULT_CONFIG["MODULE_APPLICATION"]
+        logger.warning(f"Warning: {CONFIG_FILE_NAME} not found. Using default configuration.")
+    except json.JSONDecodeError:
+        MODULE_APPLICATION = DEFAULT_CONFIG["MODULE_APPLICATION"]
+        logger.warning(f"Warning: {CONFIG_FILE_NAME} is not well-formed. Using default configuration.")
 
+def configure(module_application):
+    global MODULE_APPLICATION
+    global USE_CONFIGURE 
+    USE_CONFIGURE = True
+    MODULE_APPLICATION = module_application
 
+def get_module_application():
+    global MODULE_APPLICATION
+    if MODULE_APPLICATION is None and not USE_CONFIGURE:
+        load_config_from_file()
+    return MODULE_APPLICATION
 
 def load_modules_from_subdirectories(directory, module_name="module.py", use_cache=True):
     """
@@ -46,7 +69,6 @@ def load_modules_from_subdirectories(directory, module_name="module.py", use_cac
 
     return loaded_modules
 
-
 def inject(interface_index_mapping=None):
     """
     A decorator that handles dependency injection for functions based on their type hints.
@@ -60,7 +82,7 @@ def inject(interface_index_mapping=None):
         
  
     parent_directory = os.getcwd()
-    desired_directory = os.path.join(parent_directory, MODULE_APPLICATION)
+    desired_directory = os.path.join(parent_directory, get_module_application())
     load_modules_from_subdirectories(desired_directory, use_cache=True)
 
     def decorator(func):

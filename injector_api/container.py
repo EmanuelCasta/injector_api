@@ -1,4 +1,5 @@
 import threading
+from .dependencyError import *
 
 SINGLETON = 'singleton'
 TRANSIENT = 'transient'
@@ -40,13 +41,13 @@ class DependencyContainer:
             it can be overridden with the 'override' flag.
         """
         if not implementation and not implementation_name:
-            raise ValueError("Either an implementation class or an implementation name must be provided.")
+            raise RegistrationError("Either an implementation class or an implementation name must be provided.")
         
         if implementation_name and implementation:
-            raise ValueError("Specify either an implementation class or an implementation name, not both.")
+            raise RegistrationError("Specify either an implementation class or an implementation name, not both.")
         
         if isinstance(implementation, str):
-            raise TypeError("The 'implementation' argument should be a class, not a string.")
+            raise ConfigurationError("The 'implementation' argument should be a class, not a string.")
     
 
         
@@ -58,18 +59,18 @@ class DependencyContainer:
             
             # Handle ambiguity
             if len(matching_classes) > 1:
-                raise ValueError(f"Ambiguity error: Found multiple classes named '{implementation_name}' for interface '{interface.__name__}'.")
+                raise ConfigurationError(f"Ambiguity error: Found multiple classes named '{implementation_name}' for interface '{interface.__name__}'.")
             elif len(matching_classes) == 0:
-                raise ValueError(f"No subclass named '{implementation_name}' found for interface '{interface.__name__}'")
+                raise ConfigurationError(f"No subclass named '{implementation_name}' found for interface '{interface.__name__}'")
             else:
                 implementation = matching_classes[0]
 
        
         if not issubclass(implementation, interface):
-            raise TypeError(f'Dependency error: {implementation} is not a subclass of {interface}')
+            raise ConfigurationError(f'Dependency error: {implementation} is not a subclass of {interface}')
         
         if interface.__name__ in self._services and not override:
-            raise ValueError(f"Registration error: Interface {interface} already has a registered implementation.")
+            raise RegistrationError(f"Registration error: Interface {interface} already has a registered implementation.")
         
         if interface.__name__ not in self._services:
             self._services[interface.__name__] = []
@@ -104,7 +105,7 @@ class DependencyContainer:
         The lifecycle determines how the instance is created and managed.
         """
         if interface.__name__ not in self._services:
-            raise ValueError(f"Dependency error: No service registered for interface {interface}")
+            raise ConfigurationError(f"Dependency error: No service registered for interface {interface}")
         
         implementation, lifecycle = self._services[interface.__name__][index]
 

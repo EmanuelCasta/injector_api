@@ -1,1 +1,0 @@
-MODULE_APPLICATION = "utils"
