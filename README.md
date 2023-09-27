@@ -90,13 +90,38 @@ def some_function_two(service: InterfaceWithoutOtherService):
 <p>
   Ensure the <code>module.py</code> file is located in the directory you've specified in <code>injectorConfig.json</code>. This file will be automatically read by the library during execution to load and manage dependencies.
 </p>
-<h2>Usage Guide for Injector Library in Django</h2>
-... (This section remains unchanged as it's already comprehensive)
+<h3>Usage with Django</h3>
+
+<p>If you're integrating the Injector API within a Django project, you have the option to use the <code>ScopeMiddleware</code> to manage scoped dependencies. This middleware ensures that dependencies with a "scoped" lifecycle are correctly managed within the context of a web request.</p>
+
+<p>However, do note that using scoped dependencies requires your Django application to run in a server mode where each request is handled by a separate thread or process (e.g., using gunicorn with threaded workers). Using scoped dependencies in a single-threaded server (like Django's default development server) might lead to unexpected behaviors.</p>
+
+<p>To use the middleware, add it to your Django project's middleware list:</p>
+
+<pre><code>
+MIDDLEWARE = [
+    ...
+    'path_to_your_library.ScopeMiddleware',
+    ...
+]
+</code></pre>
 
 <h2>Security Recommendations</h2>
-... (This section remains unchanged as it's already comprehensive)
+
+<p>
+  While the Injector API simplifies dependency management, there are potential security risks when using dynamic loading. We recommend the following precautions:
+</p>
+
+<ul>
+  <li>Always validate dynamically loaded information or modules.</li>
+  <li>Avoid loading modules from locations that can be manipulated by untrusted users.</li>
+  <li>Use a secure, isolated environment for your application.</li>
+  <li>Keep the library and all its dependencies up to date.</li>
+  <li>If you're using the optional <code>ScopeMiddleware</code> in Django, ensure your server is configured correctly for scoped dependencies.</li>
+</ul>
 
 <h2>Contribute</h2>
+
 <p>
   Contributions are welcome! Please submit pull requests or open issues on our GitHub repository.
 </p>
