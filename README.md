@@ -11,9 +11,7 @@
 <p>
   To install the Injector API, simply run the following pip command:
 </p>
-<pre><code>
-pip install injector-api
-</code></pre>
+<pre><code>pip install injector-api</code></pre>
 <h2>Usage</h2>
 <h3>Initial Configuration</h3>
 <p>
@@ -60,7 +58,7 @@ import application
 container.register_module(application)
 container.register(IExampleService, implementation_name='ExampleServiceImpl1' ,override=True)
 container.register(IExampleService,implementation_name='ExampleServiceImpl2',override=True,lifecycle=SINGLETON )
-container.register(Se, implementation_name='SeA')
+container.register(InterfaceWithoutOtherService, implementation_name='WithoutOtherService')
 
 </code></pre>
 <h5>or</h5>
@@ -68,14 +66,14 @@ container.register(Se, implementation_name='SeA')
 <pre><code>
 # absolute routes, DO NOT USE RELATIVE ROUTES
 from application.src.interfaces import IExampleService,InterfaceWithoutOtherService
-from application.src.class import ExampleServiceImpl1,ExampleServiceImpl2,SeA
+from application.src.class import ExampleServiceImpl1,ExampleServiceImpl2,WithoutOtherService
 import application
 
 
 container.register_module(application)
 container.register(IExampleService, ExampleServiceImpl1 ,override=True)
 container.register(IExampleService,ExampleServiceImpl2,override=True,lifecycle=SINGLETON )
-container.register(Se, SeA)
+container.register(InterfaceWithoutOtherService, WithoutOtherService)
 </code></pre>
 <h4>Override Explanation</h4>
 <p>
@@ -94,11 +92,11 @@ from injector_api.dynamically import inject
 
 @inject({IExampleService: 0})
 def some_function(service: IExampleService):
-    return service.do_something()
+  return service.do_something()
 
 @inject
 def some_function_two(service: InterfaceWithoutOtherService):
-    return service.do_something()
+  return service.do_something()
 </code></pre>
 <p>
   In the example above, the <code>IExampleService</code> dependency will be injected into <code>some_function</code>, granting access to its methods and properties.
@@ -111,10 +109,9 @@ def some_function_two(service: InterfaceWithoutOtherService):
 <p>
   In Django, call <code>configure</code> in your app configuration:
 </p>
-<pre><code>
 
 # application/apps.py
-</code><pre>
+
 <pre><code>
 from django.apps import AppConfig
 import injector_api
