@@ -1,9 +1,9 @@
 Metadata-Version: 2.1
 Name: injector-api
-Version: 0.1.0
+Version: 0.5.0
 Summary: Python dependency injection library for your projects or for dependency injection in Django!!
 Home-page: https://github.com/EmanuelCasta/injector_api
-Author: Emanuel Castañeda CARDONA
+Author: Emanuel Castañeda Cardona
 Author-email: emanuel.castaneda.cardona@gmail.com
 Project-URL: Documentation, https://github.com/EmanuelCasta/injector_api/blob/master/README.md
 Description-Content-Type: text/markdown
@@ -25,6 +25,16 @@ Description-Content-Type: text/markdown
 pip install injector-api
 </code></pre>
 <h2>Usage</h2>
+<h3>Initial Configuration</h3>
+<p>
+  First, call <code>configure</code> in your main file app configuration to set up the Injector API:
+</p>
+<pre><code>
+import injector_api
+
+injector_api.configure(module_application="your_directory_name_here")
+</code></pre>
+<p>or</p>
 <h3>Configuration <code>injectorConfig.json</code></h3>
 <p>
   After installation, configure the library to suit your project by creating an <code>injectorConfig.json</code> at the project's root. This file should define the following variable:
@@ -60,6 +70,8 @@ container.register(IExampleService, ExampleServiceImpl2, override=True)
 container.register(InterfaceWithoutOtherService, ImplInterface, override=True)
 </code></pre>
 <h5>or</h5>
+
+<pre><code>
 from injector_api.container import container
 # absolute routes, DO NOT USE RELATIVE ROUTES
 from aplicacion.src.interfaces import IExampleService
@@ -82,7 +94,7 @@ container.register(InterfaceWithoutOtherService, implementation_name='ImplInterf
 from injector_api.dynamically import inject
 
 """
-  Always use the decorator with () - using only @inject will throw an error. For correct usage, employ @inject(). When defining multiple services for an interface, use the format {interface:0}, where 0 corresponds to the first registered injection.
+  Use @inject() only when specifying the type of implementation. For correct usage, employ @inject() with the format {interface:0}, where 0 corresponds to the first registered injection. Without specifying the type of implementation, simply use @inject
 """
 
 @inject({IExampleService: 0})
@@ -101,6 +113,34 @@ def some_function_two(service: InterfaceWithoutOtherService):
   Ensure the <code>module.py</code> file is located in the directory you've specified in <code>injectorConfig.json</code>. This file will be automatically read by the library during execution to load and manage dependencies.
 </p>
 <h3>Usage with Django</h3>
+<p>
+  In Django, call <code>configure</code> in your app configuration:
+</p>
+<pre><code>
+
+# application/apps.py
+<pre></code>
+<pre><code>
+from django.apps import AppConfig
+import injector_api
+
+class ApplicationConfig(AppConfig):
+    default_auto_field = 'django.db.models.BigAutoField'
+    name = 'application'  # Ensure to use the correct name of your app here
+
+    def ready(self):
+        """
+          It should be intuited that the new_src must be in the same apps.py directory, with new_src being a dywan
+        """
+        injector_api.configure(module_application="new_src") 
+</code></pre>
+# application/__init__.py
+
+default_app_config = 'application.apps.ApplicationConfig'
+</code></pre>
+
+</code></pre>
+<p>Use the common library as if it were your own project</p>
 
 <p>If you're integrating the Injector API within a Django project, you have the option to use the <code>ScopeMiddleware</code> to manage scoped dependencies. This middleware ensures that dependencies with a "scoped" lifecycle are correctly managed within the context of a web request.</p>
 

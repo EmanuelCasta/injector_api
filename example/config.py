@@ -20,18 +20,17 @@ default_app_config = 'application.apps.ApplicationConfig'
 
 
 """
+
 # main.py
 import sys
 import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # Agrega el directorio padre al sys.path
-from  injector_api.loader import configure
+from  injector_api import initializate,inject,container,ScoperMiddlewareManual
+import injector_api
+injector_api.initializate("utils")
 
-configure(module_application="utils")
-
-from injector_api import inject
-from injector_api import container
 
 #from iter import *
 from iter import *
@@ -47,10 +46,11 @@ def another_function(service: IExampleService):
     return service.do_something()
 
 # Si no especificas cuál implementación quieres, se inyectará la primera por defecto:
-@inject
+@inject()
 def default_function(service:Se ):
     result = service.do_something()
-    return result
+    print(result)
+    
 
 
 @inject({IExampleService: 0})  # Solicitamos la segunda implementación (EveningMessageService) que es SCOPED
@@ -58,20 +58,19 @@ def handle_web_request(service: IExampleService):
     # Simulación de lógica de procesamiento
     message = service.do_something()
     print(message)
+    
+    
+    
 
 def simulate_web_request():
-    # Iniciar un nuevo scope al comienzo de la solicitud
-    container.start_scope()
+    ScoperMiddlewareManual.start(handle_web_request,default_function)
 
-    # Manejar la solicitud
-    handle_web_request()
 
-    # Finalizar el scope al final de la solicitud
-    container.end_scope()
+   
 
 simulate_web_request()  # Esto imprimirá "Good evening!"
 
-print(default_function())
-print(my_function())
+default_function()
+#print(my_function())
 
 # Resto del código ...

@@ -1,4 +1,9 @@
 import threading
+from .dependencyError import *
+import pkgutil
+import importlib
+import os
+import sys
 
 SINGLETON = 'singleton'
 TRANSIENT = 'transient'
@@ -32,56 +37,141 @@ class DependencyContainer:
         self._services = {}
         self.__instances = {}
         self.__scoped_instances = {}
+        self.__module =None
 
 
-    def register(self, interface, implementation=None,implementation_name=None, lifecycle=SINGLETON, override=False):
+    def register_module(self,module)->None:
+        self.__module = module
+
+    def is_valid_class_or_tuple(self,item):
+        """Verifica si el item es una clase o una tupla de clases."""
+        if isinstance(item, type):
+            return True
+        if isinstance(item, tuple) and all(isinstance(i, type) for i in item):
+            return True
+        return False
+    
+    def module_contains_interface(self,module_path, interface_name):
+        """Verifica si un módulo contiene una referencia al nombre de la interfaz sin importarlo."""
+        with open(module_path, 'r') as f:
+            content = f.read()
+            return interface_name in content
+
+    def find_classes_in_package_recursive(self,package, interface):
+        matches_set = set()
+        imported_modules = set()
+        class_lengths = {}
+
+
+        # Verificar que el argumento 'interface' es válido
+        if not self.is_valid_class_or_tuple(interface):
+            raise ValueError("The provided interface must be a class or a tuple of classes")
+        
+        def _find_classes_in_module(module, interface):
+            for attr_name in dir(module):
+                attr_value = getattr(module, attr_name)
+                
+                if self.is_valid_class_or_tuple(attr_value) and issubclass(attr_value, interface) and attr_value != interface:
+                    class_key = attr_value.__name__  # Usamos solo el nombre de la clase como clave
+                    
+                    # Si la clase aún no está en nuestro diccionario de longitudes
+                    if class_key not in class_lengths:
+                        class_lengths[class_key] = (len(f"{attr_value.__module__}.{attr_value.__name__}"), attr_value)
+                        matches_set.add(attr_value)
+                    
+                    else:
+                        # Si la clase está en el diccionario, comparamos las longitudes y verificamos si son la misma clase
+                        current_length, current_class = class_lengths[class_key]
+                        
+                        if len(f"{attr_value.__module__}.{attr_value.__name__}") > current_length:
+                            # Si la nueva clase tiene una ruta más larga y es la misma clase, la reemplazamos
+                            if current_class == attr_value:
+                                matches_set.remove(current_class)
+                                matches_set.add(attr_value)
+                                class_lengths[class_key] = (len(f"{attr_value.__module__}.{attr_value.__name__}"), attr_value)
+                            
+                            # Si las clases no son las mismas, las tratamos como diferentes y las agregamos ambas
+                            elif current_class != attr_value:
+                                matches_set.add(attr_value)
+        
+        def _recursive_search(package, interface):
+            for loader, module_name, is_pkg in pkgutil.walk_packages(package.__path__):
+                full_name = package.__name__ + '.' + module_name
+                if full_name in imported_modules:
+                    continue
+
+                imported_modules.add(full_name)
+                module_path = os.path.join(package.__path__[0], module_name + '.py')
+                if is_pkg:
+                    _recursive_search(importlib.import_module(full_name), interface)
+                elif self.module_contains_interface(module_path, interface.__name__ if isinstance(interface, type) else interface[0].__name__):
+                    current_script_name = sys.argv[0].replace("/", ".").replace("\\", ".").rstrip(".py")
+                    
+                    if full_name != current_script_name and full_name != package.__name__ + '.'+current_script_name:
+                        module = importlib.import_module(full_name)
+                        _find_classes_in_module(module, interface)
+            
+
+        _recursive_search(package, interface)
+        return list(matches_set)
+
+
+    def register(self,interface, implementation=None,implementation_name=None, lifecycle=SINGLETON, override=False):
         """
             Registers an implementation for a given interface. If an implementation is already registered,
             it can be overridden with the 'override' flag.
         """
         if not implementation and not implementation_name:
-            raise ValueError("Either an implementation class or an implementation name must be provided.")
+            raise RegistrationError("Either an implementation class or an implementation name must be provided.")
         
         if implementation_name and implementation:
-            raise ValueError("Specify either an implementation class or an implementation name, not both.")
+            raise RegistrationError("Specify either an implementation class or an implementation name, not both.")
         
         if isinstance(implementation, str):
-            raise TypeError("The 'implementation' argument should be a class, not a string.")
+            raise ConfigurationError("The 'implementation' argument should be a class, not a string.")
     
-
+        
         
         if implementation_name:
-            subclasses = self._get_all_subclasses(interface)
-
-            # Search for classes with the desired name
-            matching_classes = [cls for cls in subclasses if cls.__name__ == implementation_name]
+            if  self.__module is None:
+                raise ConfigurationError(f"No register module for apps")
             
-            # Handle ambiguity
-            if len(matching_classes) > 1:
-                raise ValueError(f"Ambiguity error: Found multiple classes named '{implementation_name}' for interface '{interface.__name__}'.")
-            elif len(matching_classes) == 0:
-                raise ValueError(f"No subclass named '{implementation_name}' found for interface '{interface.__name__}'")
+            
+        # Aquí intentamos encontrar las clases usando la función
+            matches = self.find_classes_in_package_recursive(self.__module, interface)
+            if not matches:
+                raise ConfigurationError(f"No class named '{implementation_name}' found.")
+            elif len(matches) > 1 and not override:
+                
+                # Aquí puedes decidir qué hacer si hay múltiples coincidencias. Por ejemplo:
+                raise ConfigurationError(f"Multiple classes named '{implementation_name,matches}' found. Please specify module.")
             else:
-                implementation = matching_classes[0]
+                if len(matches) > 1:
+                    found_exact_match = False
+                    for match in matches:
+                        class_key = f"{match.__module__}.{match.__name__}"
+                        class_key = class_key.split('.')[-1]
+                        if class_key == implementation_name:
+                            implementation = match
+                            found_exact_match = True
+                            break
+                    if not found_exact_match:
+                        raise ConfigurationError(f"Multiple matches found for '{implementation_name}', but no exact match for provided implementation name. Please specify a unique class name or check your imports.")
+                else:
+                    implementation = matches[0]
+                
+        
 
-       
         if not issubclass(implementation, interface):
-            raise TypeError(f'Dependency error: {implementation} is not a subclass of {interface}')
+            raise ConfigurationError(f'Dependency error: {implementation} is not a subclass of {interface}')
         
         if interface.__name__ in self._services and not override:
-            raise ValueError(f"Registration error: Interface {interface} already has a registered implementation.")
-        
+            raise RegistrationError(f"Registration error: Interface {interface} already has a registered implementation.")
         if interface.__name__ not in self._services:
             self._services[interface.__name__] = []
         self._services[interface.__name__].append((implementation, lifecycle))
         
-    def _get_all_subclasses(self, cls):
-        """
-        Helper method to fetch all subclasses of a given class.
-        """
-        return set(cls.__subclasses__()).union(
-            [s for c in cls.__subclasses__() for s in self._get_all_subclasses(c)]
-        )
+    
     
     def start_scope(self):
         """Starts a new scope."""
@@ -104,7 +194,7 @@ class DependencyContainer:
         The lifecycle determines how the instance is created and managed.
         """
         if interface.__name__ not in self._services:
-            raise ValueError(f"Dependency error: No service registered for interface {interface}")
+            raise ConfigurationError(f"Dependency error: No service registered for interface {interface}")
         
         implementation, lifecycle = self._services[interface.__name__][index]
 

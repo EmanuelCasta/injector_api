@@ -22,12 +22,16 @@ pip install injector-api
 <pre><code>
 import injector_api
 
-injector_api.configure(module_application="your_directory_name_here")
+injector_api.initializate("your_directory_name_here")
 </code></pre>
+<h4>Note on Directory Structure:</h4>
+<p>
+  If you specify "your_directory_name_here" (or any other directory name) as the directory for the Injector API to search, make sure that your main execution file is located in the same parent directory as "your_directory_name_here".
+</p>
 <p>or</p>
 <h3>Configuration <code>injectorConfig.json</code></h3>
 <p>
-  After installation, configure the library to suit your project by creating an <code>injectorConfig.json</code> at the project's root. This file should define the following variable:
+  Instead of directly using the <code>initializate</code> method, you can also configure the library by creating an <code>injectorConfig.json</code> at the root of your project. This file should specify the directory name:
 </p>
 <pre><code>
 {
@@ -48,29 +52,30 @@ injector_api.configure(module_application="your_directory_name_here")
 <pre><code>
 from injector_api.container import container
 # absolute routes, DO NOT USE RELATIVE ROUTES
-from aplicacion.src.interfaces import IExampleService
-from aplicacion.src.interfaces import ExampleServiceImpl1
-from aplicacion.src.interfaces import ExampleServiceImpl2
-from aplicacion.src.interfaces import InterfaceWithoutOtherService
+from application.src.interfaces import IExampleService,InterfaceWithoutOtherService
+import application
 
 # Your interfaces and classes here
 
-container.register(IExampleService, ExampleServiceImpl1, override=True)
-container.register(IExampleService, ExampleServiceImpl2, override=True)
-container.register(InterfaceWithoutOtherService, ImplInterface, override=True)
+container.register_module(application)
+container.register(IExampleService, implementation_name='ExampleServiceImpl1' ,override=True)
+container.register(IExampleService,implementation_name='ExampleServiceImpl2',override=True,lifecycle=SINGLETON )
+container.register(Se, implementation_name='SeA')
+
 </code></pre>
 <h5>or</h5>
 
 <pre><code>
-from injector_api.container import container
 # absolute routes, DO NOT USE RELATIVE ROUTES
-from aplicacion.src.interfaces import IExampleService
+from application.src.interfaces import IExampleService,InterfaceWithoutOtherService
+from application.src.class import ExampleServiceImpl1,ExampleServiceImpl2,SeA
+import application
 
-# Your interfaces and classes here
 
-container.register(IExampleService, implementation_name='ExampleServiceImpl1', override=True)
-container.register(IExampleService, implementation_name='ExampleServiceImpl2', override=True)
-container.register(InterfaceWithoutOtherService, implementation_name='ImplInterface')
+container.register_module(application)
+container.register(IExampleService, ExampleServiceImpl1 ,override=True)
+container.register(IExampleService,ExampleServiceImpl2,override=True,lifecycle=SINGLETON )
+container.register(Se, SeA)
 </code></pre>
 <h4>Override Explanation</h4>
 <p>
@@ -91,7 +96,7 @@ from injector_api.dynamically import inject
 def some_function(service: IExampleService):
     return service.do_something()
 
-@inject()
+@inject
 def some_function_two(service: InterfaceWithoutOtherService):
     return service.do_something()
 </code></pre>
@@ -109,27 +114,27 @@ def some_function_two(service: InterfaceWithoutOtherService):
 <pre><code>
 
 # application/apps.py
-<pre></code>
+</code><pre>
 <pre><code>
 from django.apps import AppConfig
 import injector_api
 
 class ApplicationConfig(AppConfig):
-    default_auto_field = 'django.db.models.BigAutoField'
     name = 'application'  # Ensure to use the correct name of your app here
 
     def ready(self):
         """
           It should be intuited that the new_src must be in the same apps.py directory, with new_src being a dywan
         """
-        injector_api.configure(module_application="new_src") 
+        injector_api.initializate("application") 
 </code></pre>
+<p>Optinal</p>
 # application/__init__.py
 
 default_app_config = 'application.apps.ApplicationConfig'
-</code></pre>
 
-</code></pre>
+
+
 <p>Use the common library as if it were your own project</p>
 
 <p>If you're integrating the Injector API within a Django project, you have the option to use the <code>ScopeMiddleware</code> to manage scoped dependencies. This middleware ensures that dependencies with a "scoped" lifecycle are correctly managed within the context of a web request.</p>

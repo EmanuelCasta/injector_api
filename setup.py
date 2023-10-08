@@ -2,9 +2,9 @@ from setuptools import setup, find_packages
 
 setup(
     name='injector_api',
-    version='0.1.0',
+    version='0.5.0',
     packages=find_packages(exclude=["tests*", "utils*"]),
-    author='Emanuel Castañeda CARDONA',
+    author='Emanuel Castañeda Cardona',
     include_package_data=True, 
     author_email='emanuel.castaneda.cardona@gmail.com',
     description='Python dependency injection library for your projects or for dependency injection in Django!!',

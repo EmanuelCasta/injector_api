@@ -4,11 +4,11 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # Agrega el directorio padre al sys.path
 from injector_api import inject
-from injector_api import container
 
 #from iter import *
-from iter import *
-
+"""
+from example.iinterfa import IExampleService,Se
+#initializate("utils")
 # Ahora, para inyectar la primera implementación en una función:
 @inject({IExampleService: 1})
 def my_function(service: IExampleService):
@@ -46,3 +46,4 @@ simulate_web_request()  # Esto imprimirá "Good evening!"
 
 print(default_function())
 print(my_function())
+"""

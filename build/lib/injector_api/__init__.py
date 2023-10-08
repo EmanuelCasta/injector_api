@@ -1,5 +1,5 @@
 from .container import DependencyContainer, SINGLETON, TRANSIENT, SCOPED, container
-from .loader import inject, load_modules_from_subdirectories
+from .loader import inject, load_modules_from_subdirectories,initializate
 from .scopeMiddlware import ScopeMiddleware
 
-__version__ = '1.0.0'
+__version__ = '0.5.0'

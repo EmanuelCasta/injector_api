@@ -3,11 +3,18 @@ import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # Agrega el directorio padre al sys.path
-from injector_api import inject
-from injector_api import container
+from injector_api import container,inject
+from injector_api.loader import start
+
+start()
+
+
 
 #from iter import *
-from iter import *
+#injector_api.initializate("utils")
+
+#from iter import *
+from example.iinterfa import IExampleService,Se
 
 # Ahora, para inyectar la primera implementación en una función:
 @inject({IExampleService: 1})
@@ -42,7 +49,8 @@ def simulate_web_request():
     # Finalizar el scope al final de la solicitud
     container.end_scope()
 
-simulate_web_request()  # Esto imprimirá "Good evening!"
+#simulate_web_request()  # Esto imprimirá "Good evening!"
 
 print(default_function())
-print(my_function())
+#print(my_function())
+print(another_function())
