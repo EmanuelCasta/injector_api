@@ -125,10 +125,15 @@ class ApplicationConfig(AppConfig):
         """
         injector_api.initializate("application") 
 </code></pre>
-<p>Optinal</p>
+<p>If in application/apps.py it doesn't work, try adding</p>
+
 # application/__init__.py
 
+<pre><code>
+
 default_app_config = 'application.apps.ApplicationConfig'
+
+</code></pre>
 
 
 
@@ -161,6 +166,27 @@ MIDDLEWARE = [
   <li>Keep the library and all its dependencies up to date.</li>
   <li>If you're using the optional <code>ScopeMiddleware</code> in Django, ensure your server is configured correctly for scoped dependencies.</li>
 </ul>
+
+<h2>Recommendation for Using Injector API Library</h2>
+
+<p>When considering the use of the Injector API library, it's essential to weigh the benefits against potential challenges. Here's our take:</p>
+
+<h3>Why We Recommend It:</h3>
+<ul>
+  <li><strong>Simplicity:</strong> The library provides a straightforward approach to dependency injection, making it easier for developers to manage and maintain their codebase.</li>
+  <li><strong>Flexibility:</strong> The ability to dynamically load modules can significantly enhance the modularity and scalability of an application.</li>
+  <li><strong>Improved Testability:</strong> Dependency injection inherently makes unit testing more straightforward, as dependencies can be easily mocked or stubbed out.</li>
+  <li><strong>Active Development:</strong> Libraries that are actively developed tend to have regular updates, which means bugs are fixed, and new features are introduced, keeping the tool relevant and up-to-date.</li>
+</ul>
+
+<h3>Potential Challenges:</h3>
+<ul>
+  <li><strong>Security Risks:</strong> As with any tool that supports dynamic module loading, there's a potential risk if not handled securely. Developers need to be cautious and follow best practices to mitigate these risks.</li>
+  <li><strong>Learning Curve:</strong> While the library aims to simplify dependency injection, newcomers to the concept might face a learning curve.</li>
+</ul>
+
+<p>In conclusion, we recommend the Injector API library for developers who understand the importance of dependency injection and are willing to adopt best practices to ensure security. However, as with any tool, it's crucial to understand its workings fully and be aware of potential pitfalls.</p>
+
 
 <h2>Contribute</h2>
 
